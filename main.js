@@ -14,10 +14,11 @@ let personCounter = 0
 let personCount = 100
 
 let separateDocumentIndexName = 'separate-document'
-let nestedIndexName = 'nested'
-let parentChildIndex = 'parent-child'
+let sameDocumentIndexName = 'same-document'
+let parentChildIndexName = 'parent-child'
 
 const newPerson = async () => {
+  let response = null
   personCounter += 1
   let person = {
     id: personCounter,
@@ -37,26 +38,36 @@ const newPerson = async () => {
 
   // write as separate documents
   for (let assessment of assessmentsWithPersonIds) {
-    let response = await writeToES(separateDocumentIndexName, 'assessment', assessment.id, assessment)
+    response = await writeToES(separateDocumentIndexName, 'assessment', assessment.id, assessment)
   }
-  let response = await writeToES(separateDocumentIndexName, 'person', person.id, person)
+  response = await writeToES(separateDocumentIndexName, 'person', person.id, person)
 
-  // write as nested document
+  // write as combined/same object
   let personWithNestedAssessments = Object.assign({
       assessment_count: assessments.length,
       assessments: assessments
     }, person)
-  response = await writeToES(nestedIndexName, 'person', person.id, personWithNestedAssessments)
+  response = await writeToES(sameDocumentIndexName, 'person', person.id, personWithNestedAssessments)
+
+  // write as parent-child
+  response = await writeToES(parentChildIndexName, 'person', person.id, person)
+  for (let assessment of assessmentsWithPersonIds) {
+    response = await writeToES(parentChildIndexName, 'assessment', assessment.id, assessment, person.id)
+  }
 
 }
 
-const writeToES = async (index, type, id, body) => {
-  return await client.index({
+const writeToES = async (index, type, id, body, parent) => {
+  let payload = {
     index: index,
     type: type,
     id: id,
     body: body
-  })
+  }
+  if (parent) {
+    payload.parent = parent
+  }
+  return await client.index(payload)
 }
 
 const newAssessment = function() {
