@@ -1,17 +1,9 @@
 # setup
 nvm use
 npm install
-node main.js
 
-# query combined people/assessments, sort on assessment values
-curl -XPOST 'http://localhost:9200/same-document/person/_search?pretty' -d '{
-  "sort": [
-    {
-      "assessment_count": "desc",
-      "assessments.rank": "desc"
-    }
-  ]
-}'
+# start ES
+docker-compose build && docker-compose up
 
 # create index for nested
 curl -XPUT 'http://localhost:9200/parent-child/' -d '
@@ -25,6 +17,21 @@ curl -XPUT 'http://localhost:9200/parent-child/' -d '
     }
   }
 }'
+
+# populate documents
+node main.js
+
+# query combined people/assessments, sort on assessment values
+curl -XPOST 'http://localhost:9200/same-document/person/_search?pretty' -d '{
+  "sort": [
+    {
+      "assessment_count": "desc",
+      "assessments.rank": "desc"
+    }
+  ]
+}'
+
+# queries...
 
 # query nested documents directly
 curl -XGET 'http://localhost:9200/parent-child/assessment/_search?pretty'
