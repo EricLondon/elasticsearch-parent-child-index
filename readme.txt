@@ -122,3 +122,134 @@ curl -XPOST 'http://localhost:9200/parent-child/person/_search' -d '{
     }
   }
 }
+
+# fetching people with/without assessments (left-join)
+curl -XPOST 'http://localhost:9200/parent-child/person/_search?pretty' -d '{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "has_child": {
+            "type": "assessment",
+            "inner_hits": {},
+            "query": {
+              "match_all": {}
+            }
+          }
+        },
+        {
+                "match_all": {}
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "id": "asc"
+    }
+  ],
+  "size": 2
+}'
+{
+  "took" : 20,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 100,
+    "max_score" : null,
+    "hits" : [
+      {
+        "_index" : "parent-child",
+        "_type" : "person",
+        "_id" : "1",
+        "_score" : null,
+        "_source" : {
+          "id" : 1,
+          "name" : "Osvaldo Pagac"
+        },
+        "sort" : [
+          1
+        ],
+        "inner_hits" : {
+          "assessment" : {
+            "hits" : {
+              "total" : 0,
+              "max_score" : null,
+              "hits" : [ ]
+            }
+          }
+        }
+      },
+      {
+        "_index" : "parent-child",
+        "_type" : "person",
+        "_id" : "2",
+        "_score" : null,
+        "_source" : {
+          "id" : 2,
+          "name" : "Ted Crooks"
+        },
+        "sort" : [
+          2
+        ],
+        "inner_hits" : {
+          "assessment" : {
+            "hits" : {
+              "total" : 3,
+              "max_score" : 1.0,
+              "hits" : [
+                {
+                  "_index" : "parent-child",
+                  "_type" : "assessment",
+                  "_id" : "1",
+                  "_score" : 1.0,
+                  "_routing" : "2",
+                  "_parent" : "2",
+                  "_source" : {
+                    "id" : 1,
+                    "name" : "Licensed Cotton Keyboard",
+                    "rank" : 78,
+                    "person_id" : 2
+                  }
+                },
+                {
+                  "_index" : "parent-child",
+                  "_type" : "assessment",
+                  "_id" : "2",
+                  "_score" : 1.0,
+                  "_routing" : "2",
+                  "_parent" : "2",
+                  "_source" : {
+                    "id" : 2,
+                    "name" : "Awesome Fresh Soap",
+                    "rank" : 28,
+                    "person_id" : 2
+                  }
+                },
+                {
+                  "_index" : "parent-child",
+                  "_type" : "assessment",
+                  "_id" : "3",
+                  "_score" : 1.0,
+                  "_routing" : "2",
+                  "_parent" : "2",
+                  "_source" : {
+                    "id" : 3,
+                    "name" : "Awesome Wooden Table",
+                    "rank" : 72,
+                    "person_id" : 2
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
