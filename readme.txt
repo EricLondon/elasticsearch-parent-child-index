@@ -39,16 +39,86 @@ curl -XGET 'http://localhost:9200/parent-child/person/_search?pretty'
 
 # todo...
 
-# find people with assesssments
-curl -XPOST 'http://localhost:9200/parent-child/person/_search?pretty' -d '
+# find people with assessments
+curl -XPOST 'http://localhost:9200/parent-child/person/_search' -d '{
+        "query": {
+                "has_child": {
+                        "type": "assessment",
+                        "inner_hits": {},
+                        "query": {
+                                "match_all": {}
+                        }
+                }
+
+        },
+        "sort": [
+                {
+                        "id": "asc"
+                }
+        ]
+}' 2>/dev/null | jq '.hits.hits[0]'
 {
-  "query": {
-    "has_child": {
-      "type": "assessment",
-      "query": {
+  "_index": "parent-child",
+  "_type": "person",
+  "_id": "2",
+  "_score": null,
+  "_source": {
+    "id": 2,
+    "name": "Ted Crooks"
+  },
+  "sort": [
+    2
+  ],
+  "inner_hits": {
+    "assessment": {
+      "hits": {
+        "total": 3,
+        "max_score": 1,
+        "hits": [
+          {
+            "_index": "parent-child",
+            "_type": "assessment",
+            "_id": "1",
+            "_score": 1,
+            "_routing": "2",
+            "_parent": "2",
+            "_source": {
+              "id": 1,
+              "name": "Licensed Cotton Keyboard",
+              "rank": 78,
+              "person_id": 2
+            }
+          },
+          {
+            "_index": "parent-child",
+            "_type": "assessment",
+            "_id": "2",
+            "_score": 1,
+            "_routing": "2",
+            "_parent": "2",
+            "_source": {
+              "id": 2,
+              "name": "Awesome Fresh Soap",
+              "rank": 28,
+              "person_id": 2
+            }
+          },
+          {
+            "_index": "parent-child",
+            "_type": "assessment",
+            "_id": "3",
+            "_score": 1,
+            "_routing": "2",
+            "_parent": "2",
+            "_source": {
+              "id": 3,
+              "name": "Awesome Wooden Table",
+              "rank": 72,
+              "person_id": 2
+            }
+          }
+        ]
       }
     }
   }
-}'
-
-
+}
